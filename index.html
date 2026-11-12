@@ -1,240 +1,44 @@
-
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AXENTRA Admin</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXENTRA | Admin Portal</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#142443;background:#f1f5fc}
-*{box-sizing:border-box}
-body{margin:0}
-header{background:#fff;padding:22px 20px;display:flex;align-items:center;justify-content:space-between}
-h1{font-size:22px;margin:0}
-main{max-width:1100px;margin:32px auto;padding:0 18px}
-.panel{background:#fff;border-radius:18px;padding:24px;margin-bottom:20px}
-input,button,select{font:inherit;border-radius:10px;padding:12px;border:1px solid #d8e0ef}
-input{width:100%;margin:7px 0 12px}
-button{cursor:pointer;background:#246af1;color:#fff;border:0}
-button.secondary{background:#edf2fa;color:#243653}
-button.reject{background:#b73b47}
-button:disabled{opacity:.55}
-#auth{max-width:460px;margin:65px auto}
-#app{display:none}
-table{width:100%;border-collapse:collapse}
-td,th{padding:14px 10px;text-align:left;border-bottom:1px solid #e6ebf3;font-size:14px}
-td.actions{white-space:nowrap}
-td.actions button{padding:9px;margin:3px}
-small{color:#66758d}
-label{display:block;margin-top:13px;font-weight:600}
-#auth small{display:block;margin-bottom:18px}
-#message{min-height:24px;color:#ad3340;white-space:pre-wrap}
-#appMessage{color:#355b9c;min-height:20px}
-.scroll{overflow-x:auto}
-@media(max-width:650px){header{padding:17px}h1{font-size:18px}.panel{padding:16px}}
-</style>
-</head>
-<body>
-<header>
-<h1>AXENTRA <span style="color:#246af1">ADMIN</span></h1>
-<button class="secondary" id="logout" hidden>Log out</button>
-</header>
-
-<section class="panel" id="auth">
-<h2>Secure Admin Login</h2>
-<small>Authorized administrators only</small>
-<label>Supabase Publishable Key (one-time setup)
-<input id="publicKey" type="text" autocomplete="off" placeholder="sb_publishable_...">
-</label>
-<label>Email<input id="email" type="email" autocomplete="username"></label>
-<label>Password<input id="password" type="password" autocomplete="current-password"></label>
-<button id="login">Sign in</button>
-<p id="message" role="status"></p>
-</section>
-
-<main id="app">
-<div class="panel">
-<h2>Wallet payment requests</h2>
-<p id="who"></p>
-<label>Show
-<select id="filter">
-<option value="pending">Pending</option>
-<option value="approved">Approved</option>
-<option value="rejected">Rejected</option>
-<option value="all">All</option>
-</select>
-</label>
-<button class="secondary" id="refresh">Refresh</button>
-<p id="appMessage" role="status"></p>
-<div class="scroll">
-<table>
-<thead><tr>
-<th>Submitted</th><th>Type</th><th>Amount</th>
-<th>Bank reference</th><th>Customer ID</th><th>Status</th><th>Action</th>
-</tr></thead>
-<tbody id="requests"></tbody>
-</table>
-</div>
-</div>
-<div class="panel">
-<strong>ABA KHQR manual review</strong>
-<p>Verify the payment in your ABA account and match its amount/reference before approving a deposit. For withdrawals, complete the bank payout before approval. A submitted request is not proof of payment.</p>
-</div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-const CONFIG={
- api:'https://axentra-secure-backend.onrender.com',
- supabaseUrl:'https://kansznbkwhtxtzqvrdia.supabase.co'
-};
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#18283f;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.hidden{display:none!important}.layout{display:flex;min-height:100vh}.sidebar{width:246px;background:#fff;border-right:1px solid #e7ebf2;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:24px 13px;flex-shrink:0}.brand{font-size:20px;font-weight:850;letter-spacing:-.8px;padding:3px 12px 29px}.brand b{color:#2563eb}.subbrand{font-size:10px;letter-spacing:2px;color:#8491a4;font-weight:700;margin:0 12px 13px}.nav{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px 13px;background:transparent;border:0;border-radius:11px;color:#607086;font-weight:600;margin-bottom:4px}.nav.active{background:#edf4ff;color:#2563eb}.nav:hover{background:#f3f6fb}.nav svg{width:19px;height:19px}.sidefoot{margin-top:auto;border-top:1px solid #edf0f5;padding:17px 12px 0;font-size:12px;color:#7b899b}.workspace{flex:1;min-width:0}.top{height:76px;background:#fff;border-bottom:1px solid #e9edf3;display:flex;justify-content:space-between;align-items:center;padding:0 32px}.top h1{font-size:20px;margin:0;letter-spacing:-.4px}.topright{display:flex;align-items:center;gap:12px}.role{background:#e9f1ff;color:#2563eb;border-radius:50px;padding:7px 11px;font-size:12px;font-weight:750}.content{padding:28px 32px;max-width:1400px;margin:auto}.muted{color:#7b899b}.intro{margin:0 0 24px;color:#7b899b;font-size:14px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}.stat,.panel{background:#fff;border:1px solid #e9edf4;border-radius:17px;box-shadow:0 4px 20px #1d3a6305}.stat{padding:22px}.stat .value{font-size:29px;font-weight:800;margin-top:10px}.stat .label{font-size:12px;color:#7b899b}.panel{padding:23px;margin-bottom:18px}.panel h2{font-size:17px;margin:0 0 10px}.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}.toolbar h2{margin:0}.btn,select,input{border:1px solid #dce4ee;border-radius:10px;padding:11px 14px;background:white;color:#25344b}.btn{background:#2563eb;border-color:#2563eb;color:white;font-weight:700}.btn.ghost{background:#f2f5fa;color:#334760;border-color:#edf1f6}.btn.danger{background:#fff1f2;color:#b42336;border-color:#ffe1e5}.btn.small{font-size:12px;padding:8px 10px}.btn:focus-visible,.nav:focus-visible,input:focus-visible{outline:3px solid #9fc2ff}table{width:100%;border-collapse:collapse;text-align:left}th{color:#8290a2;font-size:11px;text-transform:uppercase;letter-spacing:.5px}td,th{padding:14px 12px;border-bottom:1px solid #edf0f5;font-size:13px}td{color:#334155}.scroll{overflow-x:auto}.pill{border-radius:30px;padding:5px 9px;font-size:11px;font-weight:700;display:inline-block;background:#fff5e5;color:#a76710}.pill.approved{background:#e8f8ee;color:#168048}.pill.rejected{background:#fff0f0;color:#b13b43}.empty{padding:30px;text-align:center;color:#8a96a8}.hint{padding:16px;background:#f5f8fd;border-radius:12px;color:#63738a;font-size:13px;line-height:1.7}.notice{font-size:13px;color:#b23b46;white-space:pre-wrap}.walletcard{display:flex;justify-content:space-between;gap:14px;border:1px solid #e9edf4;border-radius:13px;padding:16px;margin-top:12px;flex-wrap:wrap}.walletcard strong{font-size:21px}.walletcard .meta{font-size:12px;color:#708099;line-height:1.8;overflow-wrap:anywhere}.walletcard .actions{display:flex;gap:7px;align-items:flex-start;flex-wrap:wrap}.authwrap{min-height:100vh;display:grid;place-items:center;padding:18px}.authbox{background:#fff;padding:32px;width:100%;max-width:440px;border:1px solid #e5eaf2;border-radius:20px;box-shadow:0 14px 45px #1d3a6312}.authbox h1{margin:0 0 6px}.authbox label{display:block;margin:16px 0 6px;font-size:13px;font-weight:650}.authbox input{width:100%}.authbox .btn{width:100%;margin-top:19px}.mobilemenu{display:none}.sidebar.open{transform:translateX(0)}.shade{display:none}.page{display:none}.page.active{display:block}@media(max-width:1050px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:750px){.sidebar{position:fixed;z-index:20;transform:translateX(-100%);transition:transform .2s;box-shadow:10px 0 30px #1d3a6312}.shade.show{display:block;position:fixed;inset:0;background:#14233b66;z-index:19}.mobilemenu{display:inline-flex}.top{height:66px;padding:0 17px}.top h1{font-size:17px}.content{padding:20px 15px}.panel{padding:17px}.stats{gap:10px}.stat{padding:15px}.stat .value{font-size:24px}.walletcard{display:block}.walletcard .actions{margin-top:12px}.role{display:none}}@media(max-width:370px){.stats{grid-template-columns:1fr 1fr}.stat .value{font-size:20px}}
+</style></head><body>
+<div id="auth" class="authwrap"><div class="authbox"><div class="brand" style="padding:0 0 18px">AXENTRA <b>ADMIN</b></div><h1>Welcome back</h1><p class="muted">Sign in to your management portal.</p><label for="publicKey">Supabase Publishable Key (one-time)</label><input id="publicKey" placeholder="sb_publishable_..." autocomplete="off"><label for="email">Email</label><input id="email" type="email" autocomplete="username"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"><button class="btn" id="login">Sign in securely</button><p id="message" class="notice" role="status"></p></div></div>
+<div id="app" class="layout hidden"><div class="shade" id="shade"></div><aside class="sidebar" id="sidebar"><div class="brand">AXENTRA <b>ADMIN</b></div><div class="subbrand">MANAGEMENT</div><nav id="navigation"></nav><div class="sidefoot">AXENTRA Management Portal<br><span id="sideWho">Authorized administrator</span></div></aside><div class="workspace"><header class="top"><div style="display:flex;align-items:center;gap:12px"><button id="menu" class="btn ghost mobilemenu" aria-label="Open navigation">☰</button><h1 id="pageTitle">Dashboard</h1></div><div class="topright"><span id="who" class="role">Admin</span><button id="logout" class="btn ghost small">Log out</button></div></header><main class="content">
+<section class="page active" data-page="dashboard"><p class="intro">Management overview · Live wallet data only</p><div class="stats"><div class="stat"><div class="label">Wallet requests</div><div class="value" id="total">—</div></div><div class="stat"><div class="label">Pending</div><div class="value" id="pending">—</div></div><div class="stat"><div class="label">Approved</div><div class="value" id="approved">—</div></div><div class="stat"><div class="label">Rejected</div><div class="value" id="rejected">—</div></div></div><div class="panel"><div class="toolbar"><h2>Recent payment requests</h2><button class="btn ghost small" id="dashRefresh">Refresh</button></div><div id="recent" class="muted">Loading…</div></div><div class="hint">Customer, MT5, and subscription totals will appear when their secure Admin APIs are connected. No simulated balances or trading activity are shown.</div></section>
+<section class="page" data-page="customers"><p class="intro">Customer management</p><div class="panel"><h2>Customers</h2><div class="hint">Customer directory is not yet connected to a protected Admin API. This page will display real customer records once the backend supports it.</div></div></section>
+<section class="page" data-page="mt5"><p class="intro">MT5 account monitoring</p><div class="panel"><h2>MT5 Accounts</h2><div class="hint">Account list and bot status need a dedicated read-only Admin API. No remote bot commands are sent from this page.</div></div></section>
+<section class="page" data-page="subscriptions"><p class="intro">Trials and subscription management</p><div class="panel"><h2>Subscriptions</h2><div class="hint">Plan policy: 7-day free trial and $29 per active MT5 account per month. Subscription records and renewal controls are not connected yet.</div></div></section>
+<section class="page" data-page="wallet"><p class="intro">Review real ABA KHQR deposit and withdrawal requests</p><div class="panel"><div class="toolbar"><h2>Wallet payment requests</h2><div style="display:flex;gap:8px"><select id="filter" aria-label="Request status"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="all">All</option></select><button class="btn ghost small" id="refresh">Refresh</button></div></div><p id="appMessage" class="notice" role="status"></p><div id="walletCards"></div></div><div class="panel"><h2>Manual bank verification</h2><div class="hint">Before approving a deposit, independently confirm the ABA bank transaction, amount and reference. For withdrawals, complete the bank payout before approval. A submitted request alone does not prove payment.</div></div></section>
+<section class="page" data-page="transactions"><p class="intro">Wallet request history</p><div class="panel"><div class="toolbar"><h2>Payment history</h2><button class="btn ghost small" id="historyRefresh">Refresh</button></div><p id="historyMessage" class="notice"></p><div class="scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Reference</th><th>Status</th></tr></thead><tbody id="historyBody"></tbody></table></div><div class="hint" style="margin-top:15px">This is the history of wallet requests returned by the backend, not a verified ABA bank statement or a complete accounting ledger.</div></div></section>
+<section class="page" data-page="settings"><p class="intro">Administrator and security settings</p><div class="panel"><h2>Connection details</h2><p class="muted" id="connection"></p><p class="muted" id="accountInfo"></p><div class="hint">Administrator permissions are enforced by the backend. Never paste a Supabase secret or service-role key into this website.</div></div></section>
+</main></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
+'use strict';
+const CONFIG={api:'https://axentra-secure-backend.onrender.com',supabaseUrl:'https://kansznbkwhtxtzqvrdia.supabase.co'};
 const $=id=>document.getElementById(id);
-let sb=null,current=[];
-
-function msg(s){$('message').textContent=s}
-function appMsg(s){$('appMessage').textContent=s}
-
-async function token(){
- const {data,error}=await sb.auth.getSession();
- if(error||!data.session)throw Error('Please sign in again');
- return data.session.access_token;
-}
-
-async function api(path,opts={}){
- const response=await fetch(CONFIG.api+path,{
-  ...opts,
-  headers:{
-   'Authorization':'Bearer '+await token(),
-   'Content-Type':'application/json',
-   ...(opts.headers||{})
-  }
- });
- const data=await response.json().catch(()=>({}));
- if(!response.ok)throw Error('Backend '+response.status+': '+(data.error||data.message||'Request failed'));
- return data;
-}
-
-async function start(){
- try{
-  msg('Checking administrator access…');
-  const me=await api('/api/admin/me');
-  $('who').textContent=(me.email||'Admin')+' · '+(me.role||'admin');
-  $('auth').style.display='none';
-  $('app').style.display='block';
-  $('logout').hidden=false;
-  await load();
- }catch(e){
-  msg('Admin verification failed: '+e.message);
-  $('auth').style.display='block';
-  $('app').style.display='none';
-  $('logout').hidden=true;
- }
-}
-
-async function load(){
- appMsg('Loading…');
- try{
-  const data=await api('/api/admin/wallet/requests?status='+encodeURIComponent($('filter').value));
-  current=data.requests||[];
-  const body=$('requests');
-  body.replaceChildren();
-  if(!current.length){
-   const tr=body.insertRow();
-   const td=tr.insertCell();
-   td.colSpan=7;
-   td.textContent='No requests';
-  }
-  for(const r of current){
-   const tr=body.insertRow();
-   const amount=Number(r.amount_cents||0)/100;
-   for(const value of [
-    new Date(r.created_at).toLocaleString(),
-    r.kind,
-    '$'+amount.toFixed(2),
-    r.bank_reference||'—',
-    r.user_id,
-    r.status
-   ]){
-    tr.insertCell().textContent=String(value);
-   }
-   const td=tr.insertCell();
-   td.className='actions';
-   if(r.status==='pending'){
-    for(const [label,decision,klass] of [
-     ['Approve','approve',''],
-     ['Reject','reject','reject']
-    ]){
-     const b=document.createElement('button');
-     b.textContent=label;
-     b.className=klass;
-     b.onclick=()=>decide(r,decision);
-     td.appendChild(b);
-    }
-   }
-  }
-  appMsg(current.length+' request(s)');
- }catch(e){appMsg(e.message)}
-}
-
-async function decide(r,decision){
- const verb=decision==='approve'?'APPROVE':'REJECT';
- const amount=Number(r.amount_cents||0)/100;
- if(!confirm(
-  verb+' '+r.kind+' $'+amount.toFixed(2)+'?\n'+
-  'Bank reference: '+(r.bank_reference||'none')+'\n'+
-  'Verify the bank transaction independently before approval.'
- ))return;
- appMsg('Submitting…');
- try{
-  await api('/api/admin/wallet/requests/'+encodeURIComponent(r.id)+'/decision',{
-   method:'POST',
-   body:JSON.stringify({decision})
-  });
-  await load();
- }catch(e){appMsg(e.message)}
-}
-
-$('login').onclick=async()=>{
- try{
-  const k=$('publicKey').value.trim();
-  if(!k||!(k.startsWith('sb_publishable_')||k.startsWith('eyJ')))
-   throw Error('Enter your Supabase publishable key, not secret key.');
-  if(!sb||k!==localStorage.getItem('axentra_admin_public_key'))
-   sb=window.supabase.createClient(CONFIG.supabaseUrl,k);
-  localStorage.setItem('axentra_admin_public_key',k);
-  msg('Signing in…');
-  const {error}=await sb.auth.signInWithPassword({
-   email:$('email').value.trim(),
-   password:$('password').value
-  });
-  if(error)throw Error('Supabase login: '+error.message);
-  msg('');
-  await start();
- }catch(e){msg(e.message)}
-};
-
-$('logout').onclick=async()=>{
- await sb.auth.signOut();
- location.reload();
-};
-$('filter').onchange=load;
-$('refresh').onclick=load;
-
-if(!window.supabase?.createClient){
- msg('Supabase library failed to load. Check connection and reload.');
- $('login').disabled=true;
-}else{
- const saved=localStorage.getItem('axentra_admin_public_key')||'';
- $('publicKey').value=saved;
- if(saved){
-  try{
-   sb=window.supabase.createClient(CONFIG.supabaseUrl,saved);
-   sb.auth.getSession().then(({data})=>{
-    if(data?.session)start();
-   }).catch(e=>msg(e.message));
-  }catch(e){msg('Supabase setup error: '+e.message)}
- }
-}
-</script>
-</body>
-</html>
+const names=[['dashboard','Dashboard','▦'],['customers','Customers','♙'],['mt5','MT5 Accounts','▣'],['subscriptions','Subscriptions','▤'],['wallet','Wallet','▣'],['transactions','Transactions','≡'],['settings','Settings','⚙']];
+let sb=null,me=null,allRequests=[];
+const text=(v,fallback='—')=>v===null||v===undefined||v===''?fallback:String(v);
+function errorMessage(e){return e instanceof Error?e.message:String(e)}
+function fmtDate(v){if(!v)return '—';const d=new Date(v);return isNaN(d.getTime())?'—':d.toLocaleString()}
+function money(r){const n=Number(r.amount_cents);return Number.isFinite(n)?'$'+(n/100).toFixed(2):'—'}
+function el(tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;if(value!==undefined)e.textContent=value;return e}
+function setStatus(id,s){$(id).textContent=s}
+async function token(){const {data,error}=await sb.auth.getSession();if(error||!data.session)throw Error('Please sign in again');return data.session.access_token}
+async function api(path,opts={}){let response;try{response=await fetch(CONFIG.api+path,{...opts,headers:{'Authorization':'Bearer '+await token(),'Content-Type':'application/json',...(opts.headers||{})}})}catch(e){throw Error('Cannot reach backend: '+errorMessage(e))}const data=await response.json().catch(()=>({}));if(!response.ok)throw Error('Backend '+response.status+': '+(data.error||data.message||'Request failed'));return data}
+function closeMenu(){$('sidebar').classList.remove('open');$('shade').classList.remove('show')}
+function navigate(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.dataset.page===id));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===id));$('pageTitle').textContent=names.find(n=>n[0]===id)?.[1]||'Dashboard';closeMenu();if(id==='wallet')loadWallet();if(id==='dashboard')loadDashboard();if(id==='transactions')loadHistory()}
+function initNav(){const nav=$('navigation');for(const [id,label,symbol] of names){const b=el('button','nav',symbol+'   '+label);b.dataset.page=id;b.onclick=()=>navigate(id);nav.append(b)}}
+function showApp(){ $('auth').classList.add('hidden');$('app').classList.remove('hidden');const email=me?.email||me?.user?.email||'Administrator';const role=me?.role||'admin';$('who').textContent=role;$('sideWho').textContent=email;$('accountInfo').textContent='Signed in: '+email+' · '+role;$('connection').textContent='Backend: '+CONFIG.api; navigate('dashboard')}
+async function start(){try{setStatus('message','Verifying administrator access…');me=await api('/api/admin/me');setStatus('message','');showApp()}catch(e){setStatus('message','Admin verification failed: '+errorMessage(e));$('app').classList.add('hidden');$('auth').classList.remove('hidden')}}
+async function fetchRequests(status='all'){const data=await api('/api/admin/wallet/requests?status='+encodeURIComponent(status));if(!Array.isArray(data.requests))throw Error('Backend response has no requests array');return data.requests}
+function summary(){for(const k of ['total','pending','approved','rejected'])$(k).textContent=k==='total'?allRequests.length:allRequests.filter(r=>r.status===k).length}
+async function loadDashboard(){setStatus('recent','Loading wallet activity…');try{allRequests=await fetchRequests('all');summary();$('recent').replaceChildren();if(!allRequests.length){$('recent').textContent='No wallet requests found.';return}for(const r of allRequests.slice(0,5)){const line=el('div','walletcard');const info=el('div');info.append(el('strong','',money(r)),el('div','meta',text(r.kind)+' · '+fmtDate(r.created_at)+' · '+text(r.status)));line.append(info);$('recent').append(line)}}catch(e){for(const k of ['total','pending','approved','rejected'])$(k).textContent='—';setStatus('recent',errorMessage(e))}}
+function card(r){const c=el('div','walletcard'),info=el('div'),meta=el('div','meta');info.append(el('strong','',money(r)));meta.append(el('div','',text(r.kind).toUpperCase()+' · '+fmtDate(r.created_at)),el('div','', 'Reference: '+text(r.bank_reference)),el('div','', 'Customer ID: '+text(r.user_id)));info.append(meta);const actions=el('div','actions');actions.append(el('span','pill '+(r.status||''),text(r.status)));if(r.status==='pending'){for(const [label,decision,cls] of [['Approve','approve','btn small'],['Reject','reject','btn danger small']]){const b=el('button',cls,label);b.onclick=()=>decide(r,decision);actions.append(b)}}c.append(info,actions);return c}
+async function loadWallet(){setStatus('appMessage','Loading…');$('walletCards').replaceChildren();try{const requests=await fetchRequests($('filter').value);setStatus('appMessage',requests.length+' request(s)');if(!requests.length){$('walletCards').append(el('div','empty','No requests for this filter.'));return}requests.forEach(r=>$('walletCards').append(card(r)))}catch(e){setStatus('appMessage',errorMessage(e))}}
+async function decide(r,decision){const verb=decision==='approve'?'APPROVE':'REJECT';if(!confirm(verb+' '+text(r.kind)+' '+money(r)+'?\nBank reference: '+text(r.bank_reference,'none')+'\nVerify the bank transaction independently before approval.'))return;setStatus('appMessage','Submitting decision…');try{await api('/api/admin/wallet/requests/'+encodeURIComponent(r.id)+'/decision',{method:'POST',body:JSON.stringify({decision})});await loadWallet()}catch(e){setStatus('appMessage',errorMessage(e))}}
+async function loadHistory(){setStatus('historyMessage','Loading…');$('historyBody').replaceChildren();try{const requests=await fetchRequests('all');setStatus('historyMessage',requests.length+' request(s)');for(const r of requests){const tr=document.createElement('tr');for(const v of [fmtDate(r.created_at),text(r.kind),money(r),text(r.bank_reference),text(r.status)])tr.append(el('td','',v));$('historyBody').append(tr)}if(!requests.length){const tr=document.createElement('tr'),td=el('td','empty','No payment history.');td.colSpan=5;tr.append(td);$('historyBody').append(tr)}}catch(e){setStatus('historyMessage',errorMessage(e))}}
+$('login').onclick=async()=>{try{if(!window.supabase?.createClient)throw Error('Supabase library failed to load');const key=$('publicKey').value.trim();if(!(key.startsWith('sb_publishable_')||key.startsWith('eyJ')))throw Error('Enter a Supabase publishable key, never a secret key');if(!sb||key!==localStorage.getItem('axentra_admin_public_key'))sb=window.supabase.createClient(CONFIG.supabaseUrl,key);localStorage.setItem('axentra_admin_public_key',key);setStatus('message','Signing in…');const {error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw Error('Supabase login: '+error.message);await start()}catch(e){setStatus('message',errorMessage(e))}};
+$('logout').onclick=async()=>{if(sb)await sb.auth.signOut();location.reload()};$('menu').onclick=()=>{$('sidebar').classList.add('open');$('shade').classList.add('show')};$('shade').onclick=closeMenu;$('filter').onchange=loadWallet;$('refresh').onclick=loadWallet;$('dashRefresh').onclick=loadDashboard;$('historyRefresh').onclick=loadHistory;
+initNav();const saved=localStorage.getItem('axentra_admin_public_key')||'';$('publicKey').value=saved;if(window.supabase?.createClient&&saved){try{sb=window.supabase.createClient(CONFIG.supabaseUrl,saved);sb.auth.getSession().then(({data})=>{if(data?.session)start()}).catch(e=>setStatus('message',errorMessage(e)))}catch(e){setStatus('message',errorMessage(e))}}
+</script></body></html>
